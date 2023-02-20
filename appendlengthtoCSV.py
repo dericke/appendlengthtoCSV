@@ -197,11 +197,10 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
 
         distances = {}
         for name, layer in sources.items():
-            sumlength = 0
-
-            for feature in layer.getFeatures():
-                sumlength += distance_measure.measureLength(feature.geometry())
-
+            sumlength = sum(
+                distance_measure.measureLength(feature.geometry())
+                for feature in layer.getFeatures()
+            )
             feedback.pushInfo(f"{name} is {sumlength} kilometers.")
             distances[name] = round(
                 distance_measure.convertLengthMeasurement(
@@ -210,10 +209,9 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
             )
 
         with dest_path.open("a") as f:
-            if not f.tell():  # 0 if file is new, otherwise the file already existed
-                rows_to_write = [("Country", "Data Change", "Kaart", "Total")]
-            else:
-                rows_to_write = []
+            rows_to_write = (
+                [] if f.tell() else [("Country", "Data Change", "Kaart", "Total")]
+            )
             rows_to_write += [
                 (
                     country_name,
